@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
-from __future__ import division
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import (QIcon, QFont)
-from PyQt5.QtWidgets import (qApp, QAction, QToolTip, QMainWindow, QFileDialog, QInputDialog, QMessageBox,
-                             QDesktopWidget)
+from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtWidgets import qApp, QAction, QToolTip, QMainWindow
+from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox 
+from PyQt5.QtWidgets import QDesktopWidget
 
 
-class WolfMan(QMainWindow):
+class AlgDemoApp(QMainWindow):
     """
     MainWindow
     """
@@ -24,7 +24,6 @@ class WolfMan(QMainWindow):
         self.central_widget_setting()
         self.setCentralWidget(self.central_widget_dir['start'])
 
-
         self.statusBar().showMessage('Ready')
 
         self.show()
@@ -38,8 +37,9 @@ class WolfMan(QMainWindow):
         self.setGeometry(100, 100, 900, 550)
         self.frameGeometry().moveCenter(QDesktopWidget().availableGeometry().center())
         self.move(self.frameGeometry().topLeft())
-        self.setWindowTitle('Wolf Man')
+        self.setWindowTitle('Algorithm Demo App')
         self.setWindowIcon(QIcon('python.png'))
+        # Set the mainwindows always on the front of Desktop  
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def central_widget_setting(self):
@@ -52,8 +52,8 @@ class WolfMan(QMainWindow):
             self.setCentralWidget(self.central_widget_dir['GEPP'])
             self.action = {}
             self.action_setting()
-
             self.menubar_setting()
+
         self.central_widget_dir['start'] = start_page.StartPage(activate_function=start)
 
     def action_setting(self):
