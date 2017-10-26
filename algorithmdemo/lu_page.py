@@ -1,5 +1,5 @@
-import time
 import numpy as np
+from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
@@ -7,14 +7,15 @@ from PyQt5.QtWidgets import *
 class LuAlgorithm:
 
     @staticmethod
-    def lu_0(A, step):
+    def lu_0(A, loop):
         n = len(A)
-        P, L, U = [np.eye(n), np.zeros((n, n)), np.zeros((n, n))]
+        P, L, U = np.eye(n), np.zeros((n, n)), np.zeros((n, n))
+        A_indexes, P_indexes, L_indexes, U_indexes = np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int)
 
-        if step == n - 1:
-            forward_step = step
+        if loop == n - 1:
+            forward_step = loop
         else:
-            forward_step = step + 1
+            forward_step = loop + 1
 
         for i in range(forward_step):
 
@@ -24,34 +25,66 @@ class LuAlgorithm:
                 raise ValueError("matrix is singular.")
             else:
                 if m != i:
+                    # exchange rows
                     A[[i, m], :] = A[[m, i], :]
                     P[[i, m], :] = P[[m, i], :]
                     L[[i, m], :] = L[[m, i], :]
+                    if i == forward_step - 1:
+                        # mark the indexes of the elements changed
+                        A_indexes[[i, m], :] += 1
+                        P_indexes[[i, m], :] += 1
+                        L_indexes[[i, m], :i] += 1
+
                 for j in range(i + 1, n):
+                    # update L
                     L[j, i] = A[j, i] / A[i, i]
+                    if i == forward_step - 1:
+                        # mark the indexes of the elements changed
+                        L_indexes[j, i] += 1
 
                 for j in range(i, n):
+                    # update U
                     U[i, j] = A[i, j]
+                    if i == forward_step - 1:
+                        # mark the indexes of the elements changed
+                        U_indexes[i, j] += 1
 
                 for j in range(i + 1, n):
                     for k in range(i + 1, n):
+                        # update A
                         A[j, k] -= L[j, i] * U[i, k]
+                        if i == forward_step - 1:
+                            # mark the indexes of the elements changed
+                            A_indexes[j, k] += 1
 
-        if step == n - 1:
+        if loop == n - 1:
+            # update P, L, U
             P = P.T
             L += np.eye(n)
             U[-1, -1] = A[-1, -1]
-        return A, P, L, U
+            # mark the indexes of the elements changed
+            A_indexes *= 0
+            P_indexes *= 0
+            P_indexes += 1
+            L_indexes *= 0
+            for i in range(n):
+                L_indexes[i, i] += 1
+            U_indexes *= 0
+            U_indexes[-1, -1] += 1
+
+        A_indexes, P_indexes, L_indexes, U_indexes = np.abs(A_indexes), np.abs(P_indexes), np.abs(L_indexes), np.abs(U_indexes)
+        return A, P, L, U, A_indexes, P_indexes, L_indexes, U_indexes
 
     @staticmethod
-    def lu_1(A, step):
+    def lu_1(A, loop):
         n = len(A)
         P = np.eye(n)
+        A_indexes, P_indexes, L_indexes, U_indexes = np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int)
 
-        if step == n - 1:
-            forward_step = step
+        if loop == n - 1:
+            forward_step = loop
         else:
-            forward_step = step + 1
+            forward_step = loop + 1
 
         for i in range(forward_step):
 
@@ -61,34 +94,59 @@ class LuAlgorithm:
                 raise ValueError("matrix is singular.")
             else:
                 if m != i:
+                    # exchange rows
                     A[[i, m], :] = A[[m, i], :]
                     P[[i, m], :] = P[[m, i], :]
+                    if i == forward_step - 1:
+                        # mark the indexes of the elements changed
+                        A_indexes[[i, m], :] += 1
+                        P_indexes[[i, m], :] += 1
 
                 for j in range(i + 1, n):
+                    # update A
                     A[j, i] = A[j, i] / A[i, i]
+                    if i == forward_step - 1:
+                        # mark the indexes of the elements changed
+                        A_indexes[j,  i] += 1
 
                 for j in range(i + 1, n):
                     for k in range(i + 1, n):
+                        # update A
                         A[j, k] -= A[j, i] * A[i, k]
+                        if i == forward_step - 1:
+                            # mark the indexes of the elements changed
+                            A_indexes[j, k] += 1
 
-        if step == n - 1:
+        if loop == n - 1:
+            # update P, L, U
             P = P.T
             L = np.tril(A, -1) + np.eye(n)
             U = np.triu(A, 0)
+            # mark the indexes of the elements changed
+            A_indexes *= 0
+            P_indexes *= 0
+            P_indexes += 1
+            for i in range(1, n):
+                L_indexes[i, :i] += 1
+            for i in range(n):
+                U_indexes[i, i:] += 1
         else:
             L = np.eye(n)
             U = np.zeros((n, n))
-        return A, P, L, U
+
+        A_indexes, P_indexes, L_indexes, U_indexes = np.abs(A_indexes), np.abs(P_indexes), np.abs(L_indexes), np.abs(U_indexes)
+        return A, P, L, U, A_indexes, P_indexes, L_indexes, U_indexes
 
     @staticmethod
-    def lu_2(A, step):
+    def lu_2(A, loop):
         n = len(A)
         P = np.eye(n)
+        A_indexes, P_indexes, L_indexes, U_indexes = np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int), np.zeros((n, n), dtype=int)
 
-        if step == n - 1:
-            forward_step = step
+        if loop == n - 1:
+            forward_step = loop
         else:
-            forward_step = step + 1
+            forward_step = loop + 1
 
         for i in range(forward_step):
 
@@ -98,20 +156,40 @@ class LuAlgorithm:
                 raise ValueError("matrix is singular.")
             else:
                 if m != i:
+                    # exchange rows
                     A[[i, m], :] = A[[m, i], :]
                     P[[i, m], :] = P[[m, i], :]
+                    if i == forward_step - 1:
+                        # mark the indexes of the elements changed
+                        A_indexes[[i, m], :] += 1
+                        P_indexes[[i, m], :] += 1
 
+                # update A
                 A[(i + 1):, i] = A[(i + 1):, i] / A[i, i]
                 A[(i + 1):, (i + 1):] -= A[(i + 1):, i][:, None] * A[i, (i + 1):]
+                if i == forward_step - 1:
+                    # mark the indexes of the elements changed
+                    A_indexes[(i + 1):, i:] += 1
 
-        if step == n - 1:
+        if loop == n - 1:
+            # update P, L, U
             P = P.T
             L = np.tril(A, -1) + np.eye(n)
             U = np.triu(A, 0)
+            # mark the indexes of the elements changed
+            A_indexes *= 0
+            P_indexes *= 0
+            P_indexes += 1
+            for i in range(1, n):
+                L_indexes[i, :i] += 1
+            for i in range(n):
+                U_indexes[i, i:] += 1
         else:
             L = np.eye(n)
             U = np.zeros((n, n))
-        return A, P, L, U
+
+        A_indexes, P_indexes, L_indexes, U_indexes = np.abs(A_indexes), np.abs(P_indexes), np.abs(L_indexes), np.abs(U_indexes)
+        return A, P, L, U, A_indexes, P_indexes, L_indexes, U_indexes
 
 
 class LuAlgorithmPage(QWidget):
@@ -128,7 +206,10 @@ class LuAlgorithmPage(QWidget):
         self.decimal_digits = '%.3f'
 
         self.widget_setting()
-        self.widget_init()
+
+        self.table_write(dim=int(self.combobox[0].currentText()), table=self.tablewidget[0], matrix=np.array([[4, 2, 1, 5], [8, 7, 2, 10], [4, 8, 3, 6], [6, 8, 4, 9]], dtype=float))
+
+        self.widget_connet()
 
     def widget_setting(self):
 
@@ -143,127 +224,77 @@ class LuAlgorithmPage(QWidget):
         self.combobox[0].setCurrentIndex(1)
         self.layout.addWidget(self.combobox[0], 0, 1, 1, 1)
 
-        # label 1 := step
-        self.label.append(QLabel('step'))
+        # label 1 := loop
+        self.label.append(QLabel('loop'))
         self.label[1].setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.label[1], 0, 2, 1, 1)
+        self.layout.addWidget(self.label[1], 1, 0, 1, 1)
 
-        # combobox 1 := step
+        # combobox 1 := loop
         self.combobox.append(QComboBox())
         self.combobox[1].addItems(list(map(str, range(int(self.combobox[0].currentText())))))
         self.combobox[1].setCurrentIndex(int(self.combobox[0].currentText()) - 1)
-        self.layout.addWidget(self.combobox[1], 0, 3, 1, 1)
+        self.layout.addWidget(self.combobox[1], 1, 1, 1, 1)
 
         # radiobutton 0 := matrix create
         self.radiobutton.append(QRadioButton('user-defined'))
         self.radiobutton[0].setChecked(True)
-        self.layout.addWidget(self.radiobutton[0], 0, 4, 1, 1)
+        self.layout.addWidget(self.radiobutton[0], 2, 0, 1, 1)
 
         # radiobutton 1 := matrix create
         self.radiobutton.append(QRadioButton('random matrix'))
         self.radiobutton[1].setChecked(False)
-        self.layout.addWidget(self.radiobutton[1], 0, 5, 1, 1)
-
-        # pushbutton 0 := algorithm info
-        self.pushbutton.append(QPushButton('algorithm info'))
-        self.layout.addWidget(self.pushbutton[0], 0, 6, 1, 1)
+        self.layout.addWidget(self.radiobutton[1], 2, 1, 1, 1)
 
         # tablewidget 0 := analysis of lu algorithm
-        self.tablewidget.append(QTableWidget(1, 1))
-        self.tablewidget[0].setColumnCount(4)
-        self.tablewidget[0].setHorizontalHeaderLabels(['', '2.2', '2.3', '2.4'])
-        self.tablewidget[0].setRowCount(5)
-        self.tablewidget[0].setItem(0, 0, QTableWidgetItem('time'))
-        self.tablewidget[0].resizeColumnsToContents()
-        self.layout.addWidget(self.tablewidget[0], 1, 0, 4, 2)
+        self.tablewidget.append(QTableWidget(int(self.combobox[0].currentText()), int(self.combobox[0].currentText())))
+        self.tablewidget[-1].setHorizontalHeaderLabels(list(map(str, range(int(self.combobox[0].currentText())))))
+        self.tablewidget[-1].setVerticalHeaderLabels(list(map(str, range(int(self.combobox[0].currentText())))))
+        self.tablewidget[-1].resizeColumnsToContents()
+        self.layout.addWidget(self.tablewidget[0], 4, 0, 4, 2)
 
+        # tabwidget 0
         class WidgetInner(QTabWidget):
-            def __init__(self, dimation):
+            def __init__(self, dim):
                 QTabWidget.__init__(self)
 
                 self.layout, self.widget, self.tablewidget = [], [], []
+                self.color = np.random.randint(100, 200, 3)
 
-                # layout 0
-                self.layout.append(QGridLayout())
-                self.layout[0].setSpacing(10)
-                # tablewidget 0 := origin matrix A_0 in lu_0
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[0].addWidget(self.tablewidget[0], 0, 0, 1, 1)
-                # tablewidget 1 := origin matrix P in lu_0
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[0].addWidget(self.tablewidget[1], 0, 1, 1, 1)
-                # tablewidget 2 := origin matrix L in lu_0
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[0].addWidget(self.tablewidget[2], 1, 0, 1, 1)
-                # tablewidget 3 := origin matrix U in lu_0
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[0].addWidget(self.tablewidget[3], 1, 1, 1, 1)
-                # widget 0
-                self.widget.append(QWidget())
-                self.widget[0].setLayout(self.layout[0])
-
-                # layout 1
-                self.layout.append(QGridLayout())
-                self.layout[1].setSpacing(10)
-                # tablewidget 5 := origin matrix A_0 in lu_1
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[1].addWidget(self.tablewidget[4], 0, 0, 1, 1)
-                # tablewidget 6 := origin matrix P in lu_1
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[1].addWidget(self.tablewidget[5], 0, 1, 1, 1)
-                # tablewidget 7 := origin matrix L in lu_1
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[1].addWidget(self.tablewidget[6], 1, 0, 1, 1)
-                # tablewidget 8 := origin matrix U in lu_1
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[1].addWidget(self.tablewidget[7], 1, 1, 1, 1)
-                # widget 1
-                self.widget.append(QWidget())
-                self.widget[1].setLayout(self.layout[1])
-
-                # layout 2
-                self.layout.append(QGridLayout())
-                self.layout[2].setSpacing(10)
-                # tablewidget 9 := origin matrix A_0 in lu_2
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[2].addWidget(self.tablewidget[8], 0, 0, 1, 1)
-                # tablewidget 10 := origin matrix P in lu_2
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[2].addWidget(self.tablewidget[9], 0, 1, 1, 1)
-                # tablewidget 11 := origin matrix L in lu_2
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[2].addWidget(self.tablewidget[10], 1, 0, 1, 1)
-                # tablewidget 12 := origin matrix U in lu_2
-                self.tablewidget.append(QTableWidget(dimation, dimation))
-                self.layout[2].addWidget(self.tablewidget[11], 1, 1, 1, 1)
-                # widget 2
-                self.widget.append(QWidget())
-                self.widget[2].setLayout(self.layout[2])
+                for i in range(3):
+                    # layout i
+                    self.layout.append(QGridLayout())
+                    self.layout[i].setSpacing(10)
+                    # tablewidget := origin matrix A_0 in lu_0
+                    self.tablewidget.append(QTableWidget(dim, dim))
+                    self.tablewidget[-1].setHorizontalHeaderLabels(list(map(str, range(dim))))
+                    self.tablewidget[-1].setVerticalHeaderLabels(list(map(str, range(dim))))
+                    self.layout[i].addWidget(self.tablewidget[-1], 0, 0, 1, 1)
+                    # tablewidget := origin matrix P in lu_0
+                    self.tablewidget.append(QTableWidget(dim, dim))
+                    self.tablewidget[-1].setHorizontalHeaderLabels(list(map(str, range(dim))))
+                    self.tablewidget[-1].setVerticalHeaderLabels(list(map(str, range(dim))))
+                    self.layout[i].addWidget(self.tablewidget[-1], 0, 1, 1, 1)
+                    # tablewidget := origin matrix L in lu_0
+                    self.tablewidget.append(QTableWidget(dim, dim))
+                    self.tablewidget[-1].setHorizontalHeaderLabels(list(map(str, range(dim))))
+                    self.tablewidget[-1].setVerticalHeaderLabels(list(map(str, range(dim))))
+                    self.layout[i].addWidget(self.tablewidget[-1], 1, 0, 1, 1)
+                    # tablewidget := origin matrix U in lu_0
+                    self.tablewidget.append(QTableWidget(dim, dim))
+                    self.tablewidget[-1].setHorizontalHeaderLabels(list(map(str, range(dim))))
+                    self.tablewidget[-1].setVerticalHeaderLabels(list(map(str, range(dim))))
+                    self.layout[i].addWidget(self.tablewidget[-1], 1, 1, 1, 1)
+                    # widget 0
+                    self.widget.append(QWidget())
+                    self.widget[i].setLayout(self.layout[i])
 
                 self.addTab(self.widget[0], '&Algorithm_2_2')
                 self.addTab(self.widget[1], '&Algorithm_2_3')
                 self.addTab(self.widget[2], '&Algorithm_2_4')
-
-        # tabwidget 0
-        self.tabwidget.append(WidgetInner(dimation=int(self.combobox[0].currentText())))
-        self.layout.addWidget(self.tabwidget[0], 1, 2, 8, 5)
-
-        # tablewidget 1 := analysis of lu algorithm
-        self.tablewidget.append(QTableWidget(1, 1))
-        self.tablewidget[1].setColumnCount(int(self.combobox[0].currentText()))
-        self.tablewidget[1].setRowCount(int(self.combobox[0].currentText()))
-        self.tablewidget[1].resizeColumnsToContents()
-        self.layout.addWidget(self.tablewidget[1], 5, 0, 4, 2)
+        self.tabwidget.append(WidgetInner(dim=int(self.combobox[0].currentText())))
+        self.layout.addWidget(self.tabwidget[0], 0, 2, 8, 5)
 
         self.setLayout(self.layout)
-
-    def widget_init(self):
-
-        matrix = np.array([[4, 2, 1, 5], [8, 7, 2, 10], [4, 8, 3, 6], [6, 8, 4, 9]], dtype=float)
-        self.table_write(dimation=int(self.combobox[0].currentText()), table=self.tablewidget[1], matrix=matrix)
-        self.matrix_calulate()
-
-        self.widget_connet()
 
     def widget_connet(self):
         # change matrix size
@@ -277,7 +308,7 @@ class LuAlgorithmPage(QWidget):
         # # show us the information of LU algorithm TODO: undefined action of pushbutton
         # self.pushbutton[0].clicked.connect(self.function_4)
         # change origin matrix
-        self.tablewidget[1].itemChanged.connect(self.matrix_calulate)
+        self.tablewidget[0].itemChanged.connect(self.matrix_calulate)
 
     def widget_disconnet(self):
         # change matrix size
@@ -291,7 +322,7 @@ class LuAlgorithmPage(QWidget):
         # # show us the information of LU algorithm TODO: undefined action of pushbutton
         # self.pushbutton[0].clicked.disconnect(self.function_4)
         # change origin matrix
-        self.tablewidget[1].itemChanged.disconnect(self.matrix_calulate)
+        self.tablewidget[0].itemChanged.disconnect(self.matrix_calulate)
 
     @staticmethod
     def table_read(table):
@@ -306,11 +337,11 @@ class LuAlgorithmPage(QWidget):
         return matrix
 
     @staticmethod
-    def table_write(dimation, table, matrix, decimal_digits=None):
-        table.setColumnCount(dimation)
-        table.setRowCount(dimation)
-        for i in range(dimation):
-            for j in range(dimation):
+    def table_write(dim, table, matrix, decimal_digits=None, color_indexes=None, color=None):
+        table.setColumnCount(dim)
+        table.setRowCount(dim)
+        for i in range(dim):
+            for j in range(dim):
                 try:
                     if decimal_digits is None:
                         new_item = QTableWidgetItem(str(matrix[i, j]))
@@ -324,52 +355,41 @@ class LuAlgorithmPage(QWidget):
                         new_item = QTableWidgetItem(str(1.0 * np.random.randint(0, 10)))
                     else:
                         new_item = QTableWidgetItem(decimal_digits % np.random.randint(0, 10))
+
+                if color_indexes is not None:
+                    max_index = np.max(color_indexes)
+                    if color_indexes[i, j] != 0:
+                        new_item.setBackground(QColor((max_index - color_indexes[i, j] // 2) * (color[0] // max_index), (max_index - color_indexes[i, j] // 2) * (color[1] // max_index), (max_index - color_indexes[i, j] // 2) * (color[2] // max_index)))
+
                 table.setItem(i, j, new_item)
+
         table.resizeColumnsToContents()
 
     def matrix_calulate(self):
         """
         calculate A P L U by using Gaussian elimination with partial pivoting.
         """
-        dimation = int(self.combobox[0].currentText())
-        matrix = self.table_read(self.tablewidget[1])
-        step = int(self.combobox[1].currentText())
+        for i in range(3):
+            if i == 0:
+                A, P, L, U, A_indexes, P_indexes, L_indexes, U_indexes = LuAlgorithm().lu_0(A=self.table_read(self.tablewidget[0]), loop=int(self.combobox[1].currentText()))
+            elif i == 1:
+                A, P, L, U, A_indexes, P_indexes, L_indexes, U_indexes = LuAlgorithm().lu_1(A=self.table_read(self.tablewidget[0]), loop=int(self.combobox[1].currentText()))
+            else:
+                A, P, L, U, A_indexes, P_indexes, L_indexes, U_indexes = LuAlgorithm().lu_2(A=self.table_read(self.tablewidget[0]), loop=int(self.combobox[1].currentText()))
+            self.table_write(dim=int(self.combobox[0].currentText()), table=self.tabwidget[0].tablewidget[0+4*i], matrix=A, decimal_digits=self.decimal_digits, color_indexes=A_indexes, color=self.tabwidget[0].color)
+            self.table_write(dim=int(self.combobox[0].currentText()), table=self.tabwidget[0].tablewidget[1+4*i], matrix=P, decimal_digits='%d', color_indexes=P_indexes, color=self.tabwidget[0].color)
+            self.table_write(dim=int(self.combobox[0].currentText()), table=self.tabwidget[0].tablewidget[2+4*i], matrix=L, decimal_digits=self.decimal_digits, color_indexes=L_indexes, color=self.tabwidget[0].color)
+            self.table_write(dim=int(self.combobox[0].currentText()), table=self.tabwidget[0].tablewidget[3+4*i], matrix=U, decimal_digits=self.decimal_digits, color_indexes=U_indexes, color=self.tabwidget[0].color)
 
-        start = time.clock()
-        A, P, L, U = LuAlgorithm().lu_0(A=matrix.copy(), step=step)
-        end = time.clock()
-        self.tablewidget[0].setItem(0, 1, QTableWidgetItem('%.2es' % (end-start)))
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[0], matrix=A, decimal_digits=self.decimal_digits)
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[1], matrix=P, decimal_digits='%d')
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[2], matrix=L, decimal_digits=self.decimal_digits)
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[3], matrix=U, decimal_digits=self.decimal_digits)
-
-        start = time.clock()
-        A, P, L, U = LuAlgorithm().lu_1(A=matrix.copy(), step=step)
-        end = time.clock()
-        self.tablewidget[0].setItem(0, 2, QTableWidgetItem('%.2es' % (end - start)))
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[4], matrix=A, decimal_digits=self.decimal_digits)
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[5], matrix=P, decimal_digits='%.0f')
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[6], matrix=L, decimal_digits=self.decimal_digits)
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[7], matrix=U, decimal_digits=self.decimal_digits)
-
-        start = time.clock()
-        A, P, L, U = LuAlgorithm().lu_2(A=matrix.copy(), step=step)
-        end = time.clock()
-        self.tablewidget[0].setItem(0, 3, QTableWidgetItem('%.2es' % (end - start)))
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[8], matrix=A, decimal_digits=self.decimal_digits)
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[9], matrix=P, decimal_digits='%.0f')
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[10], matrix=L, decimal_digits=self.decimal_digits)
-        self.table_write(dimation, table=self.tabwidget[0].tablewidget[11], matrix=U, decimal_digits=self.decimal_digits)
         self.tablewidget[0].resizeColumnsToContents()
 
     def function_combobox_0(self):
         self.widget_disconnet()
 
         # change combobox 1
-        dimation = int(self.combobox[0].currentText())
+        dim = int(self.combobox[0].currentText())
         self.combobox[1].clear()
-        self.combobox[1].addItems(list(map(str, range(dimation))))
+        self.combobox[1].addItems(list(map(str, range(dim))))
 
         self.function_combobox_1()
 
@@ -377,10 +397,7 @@ class LuAlgorithmPage(QWidget):
 
     def function_combobox_1(self):
         # resize all the tables
-        matrix = self.table_read(self.tablewidget[1])
-        self.table_write(int(self.combobox[0].currentText()), table=self.tablewidget[1], matrix=matrix)
-        for i in range(12):
-            self.table_write(int(self.combobox[0].currentText()), table=self.tabwidget[0].tablewidget[i], matrix=matrix)
+        self.table_write(dim=int(self.combobox[0].currentText()), table=self.tablewidget[0], matrix=self.table_read(self.tablewidget[0]))
 
         # change table 1~12
         self.matrix_calulate()
@@ -390,12 +407,12 @@ class LuAlgorithmPage(QWidget):
 
         if self.radiobutton[1].isChecked():
 
-            n = self.tablewidget[1].columnCount()
+            n = self.tablewidget[0].columnCount()
             for i in range(n):
                 for j in range(n):
                     new_item = QTableWidgetItem(str(1.0 * np.random.randint(0, 10)))
-                    self.tablewidget[1].setItem(i, j, new_item)
-            self.tablewidget[1].resizeColumnsToContents()
+                    self.tablewidget[0].setItem(i, j, new_item)
+            self.tablewidget[0].resizeColumnsToContents()
 
         # change table 0~11 inside the tabwidget.
         self.matrix_calulate()

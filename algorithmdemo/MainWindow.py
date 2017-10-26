@@ -38,9 +38,10 @@ class AlgDemoApp(QMainWindow):
         self.frameGeometry().moveCenter(QDesktopWidget().availableGeometry().center())
         self.move(self.frameGeometry().topLeft())
         self.setWindowTitle('Algorithm Demo App')
-        self.setWindowIcon(QIcon('python.png'))
-        # Set the mainwindows always on the front of Desktop  
+        self.setWindowIcon(QIcon('./icons/python.png'))
+        # Set the MainWindows always on the front of Desktop
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        # self.setWindowFlags(Qt.FramelessWindowHint) #  TODO: invisible frame of main window
 
     def central_widget_setting(self):
         import lu_page
@@ -62,13 +63,13 @@ class AlgDemoApp(QMainWindow):
         """
 
         self.action["show_open_dialog"] = QAction('Open File', self)
-        self.action["show_open_dialog"].setIcon(QIcon('open.png'))
+        self.action["show_open_dialog"].setIcon(QIcon('./icons/open.png'))
         self.action["show_open_dialog"].setShortcut('Ctrl+O')
         self.action["show_open_dialog"].setStatusTip('Open File')
         self.action["show_open_dialog"].triggered.connect(self.show_open_dialog)
 
         self.action["qApp_quit"] = QAction('Exit application', self)
-        self.action["qApp_quit"].setIcon(QIcon('exit.jpg'))
+        self.action["qApp_quit"].setIcon(QIcon('./icons/exit.jpg'))
         self.action["qApp_quit"].setShortcut('Ctrl+Q')
         self.action["qApp_quit"].setStatusTip('Exit application')
         self.action["qApp_quit"].triggered.connect(qApp.quit)
@@ -76,7 +77,7 @@ class AlgDemoApp(QMainWindow):
         def swith_GEPP():
             self.setCentralWidget(self.central_widget_dir['GEPP'])
         self.action["GEPP"] = QAction('GEPP', self)
-        self.action["GEPP"].setIcon(QIcon('numpy.jpg'))
+        self.action["GEPP"].setIcon(QIcon('./icons/numpy.jpg'))
         self.action["GEPP"].setShortcut('Ctrl+L')
         self.action["GEPP"].setStatusTip('GEPP')
         self.action["GEPP"].triggered.connect(swith_GEPP)
