@@ -1,0 +1,51 @@
+"""
+A is an n-by-n random matrix,
+B is an n-by-n unit matrix
+"""
+
+for i = 1 to n-1:
+    # part 1
+    for j = 1 to i:
+        b(i, j) = b(i, j) / a(i, i)
+    end for
+
+    for j = i+1 to n:
+        a(i, j) = a(i, j) / a(i, i)
+    end for
+    a[i, i] = 1
+
+    # part 2
+    for k = i+1 to n:
+        for j = 1 to i-1:
+            b(k, j) = b(k, j) - b(i, j) * a(k, i)
+        end for
+
+        b(k, i) = -b(i, i) * a(k, i)
+
+        for j = i+1 to n:
+            a(k, j) = a(k, j) - a(i, j) * a(k, i)
+        end for
+
+        a(k, i) = 0
+    end for
+
+# part 3
+for i = n-1 to 1:
+    if i == n-1:
+        for k = i to 1:
+            for j = 1 to k:
+                b(k, j) = b(k, j) - b(i+1, j) * a(k, i+1)
+            end for
+            for j = k+1 to n:
+                b(k, j) = -b(i+1, j) * a(k, i+1)
+            end for
+            a(k, i+1) = 0
+        end for
+    else:
+        for k = i to 1:
+            for j = 1 to n:
+                b(k, j) = b(k, j) - b(i+1, j) * a(k, i+1)
+            end for
+            a(k, i+1) = 0
+        end for
+    end if
