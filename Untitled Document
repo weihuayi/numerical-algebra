@@ -1,0 +1,56 @@
+Chapter 1 
+Chapter 2
+
+Theorem 2.1 
+Alg 2.1 
+Theorem 2.4 
+Theorem 2.5 
+Alg 2.2 
+Alg 2.5 
+Theorem 2.6 
+
+Q 2.3 
+Q 2.7 
+Q 2.10 
+Q 2.11
+
+Chapter 3
+
+* Normal equation 
+* QR Decomposition
+	+ Algorithm 3.1 CGS MGS 
+* SVD 
+	+ Theorem 3.2 
+         + Theorem 3.3 
+
+* Householder Transformations 
+	+ Alg 3.2 
+* Givens Rotations 
+
+Theorem 3.5 
+
+Question 3.3 1 and 2 
+Quaestion 3.4 3.5 3.7 3.8 3.9 
+
+Chapter 5
+
+Theorem 5.1 Weyl's theorem 
+Theorem 5.2  Courant-Fischer minmimax theorem 
+Theorem 5.3 Sylvester's intertia theorem 
+Theorem 5.4 
+Theorme 5.5 
+Theorem 5.6 "Relative Weyl's theorem 
+Theorem 5.7 
+
+
+5.3.1 Tridiagonal QR Iteration 
+5.3.2 Alg 5.1 
+Theorem 5.9 
+5.3.3 DC 
+Alg 5.2 
+5.3.4 
+Alg .5.4 
+Alg  5.5 
+Lemma 5.4 
+
+Question 5.1 5.5 5.7 5.14 
